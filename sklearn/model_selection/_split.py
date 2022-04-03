@@ -1029,16 +1029,11 @@ class TimeSeriesSplit(_BaseKFold):
     + n_samples % (n_splits + 1)`` in the ``i`` th split,
     with a test set of size ``n_samples//(n_splits + 1)`` by default,
     where ``n_samples`` is the number of samples.
-
-    n_behaviour = 0 is old
-    n_behaviour = 1 is new
     """
 
-    def __init__(self, n_behaviour=0, n_splits=5, *, max_train_size=None, max_test_size=None, test_size=None, gap=0):
+    def __init__(self, n_splits=5, *, max_train_size=None, test_size=None, gap=0):
         super().__init__(n_splits, shuffle=False, random_state=None)
-        self.n_behaviour = n_behaviour
         self.max_train_size = max_train_size
-        self.max_test_size = max_test_size
         self.test_size = test_size
         self.gap = gap
 
@@ -1065,6 +1060,7 @@ class TimeSeriesSplit(_BaseKFold):
         test : ndarray
             The testing set indices for that split.
         """
+<<<<<<< HEAD
         n_behaviour = self.n_behaviour
         if n_behaviour == 1:
             X, y, groups = indexable(X, y, groups)
@@ -1072,11 +1068,30 @@ class TimeSeriesSplit(_BaseKFold):
             n_splits = self.n_splits
             max_test_size = (
                 self.max_test_size if self. max_test_size is not None else 1
+=======
+        X, y, groups = indexable(X, y, groups)
+        n_samples = _num_samples(X)
+        n_splits = self.n_splits
+        n_folds = n_splits + 1
+        gap = self.gap
+        test_size = (
+            self.test_size if self.test_size is not None else n_samples // n_folds
+        )
+
+        # Make sure we have enough samples for the given split parameters
+        if n_folds > n_samples:
+            raise ValueError(
+                f"Cannot have number of folds={n_folds} greater"
+                f" than the number of samples={n_samples}."
+>>>>>>> parent of bee9a52c7... added some code
             )
-            max_train_size = (
-                self.max_train_size if self.max_train_size is not None else 0
+        if n_samples - gap - (test_size * n_splits) <= 0:
+            raise ValueError(
+                f"Too many splits={n_splits} for number of samples"
+                f"={n_samples} with test_size={test_size} and gap={gap}."
             )
 
+<<<<<<< HEAD
             # ADD ERRORS
             # if n_samples - gap - (test_size * n_splits) <= 0:
             #     raise ValueError(
@@ -1102,35 +1117,23 @@ class TimeSeriesSplit(_BaseKFold):
             test_size = (
                 self.max_test_size if self.test_size is not None else n_samples // n_folds
             )
+=======
+        indices = np.arange(n_samples)
+        test_starts = range(n_samples - n_splits * test_size, n_samples, test_size)
+>>>>>>> parent of bee9a52c7... added some code
 
-            # Make sure we have enough samples for the given split parameters
-            if n_folds > n_samples:
-                raise ValueError(
-                    f"Cannot have number of folds={n_folds} greater"
-                    f" than the number of samples={n_samples}."
+        for test_start in test_starts:
+            train_end = test_start - gap
+            if self.max_train_size and self.max_train_size < train_end:
+                yield (
+                    indices[train_end - self.max_train_size : train_end],
+                    indices[test_start : test_start + test_size],
                 )
-            if n_samples - gap - (test_size * n_splits) <= 0:
-                raise ValueError(
-                    f"Too many splits={n_splits} for number of samples"
-                    f"={n_samples} with test_size={test_size} and gap={gap}."
+            else:
+                yield (
+                    indices[:train_end],
+                    indices[test_start : test_start + test_size],
                 )
-
-            indices = np.arange(n_samples)
-            test_starts = range(n_samples - n_splits * test_size, n_samples, test_size)
-
-            for test_start in test_starts:
-                train_end = test_start - gap
-                if self.max_train_size and self.max_train_size < train_end:
-                    yield (
-                        indices[train_end - self.max_train_size: train_end],
-                        indices[test_start: test_start + test_size],
-                    )
-                else:
-                    yield (
-                        indices[:train_end],
-                        indices[test_start: test_start + test_size],
-                    )
-
 
 
 class LeaveOneGroupOut(BaseCrossValidator):
