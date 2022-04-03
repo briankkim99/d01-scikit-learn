@@ -1901,7 +1901,7 @@ def test_random_state_shuffle_false(Klass):
 )
 def test_yields_constant_splits(cv, expected):
     x = np.arange(10)
-    cv = TimeSeriesSplit(n_behaviour=1, max_train_size=3, max_test_size=1)
+    cv = TimeSeriesSplit(n_behaviour=0, test_size=1, max_train_size=3, n_splits=7, gap=2)
     print('')
     for train_index, test_index in cv.split(x):
         print("TRAIN:", train_index, "TEST:", test_index)

@@ -1070,8 +1070,6 @@ class TimeSeriesSplit(_BaseKFold):
             X, y, groups = indexable(X, y, groups)
             n_samples = _num_samples(X)
             n_splits = self.n_splits
-            n_folds = n_splits + 1
-            gap = self.gap
             max_test_size = (
                 self.max_test_size if self. max_test_size is not None else 1
             )
@@ -1079,12 +1077,7 @@ class TimeSeriesSplit(_BaseKFold):
                 self.max_train_size if self.max_train_size is not None else 0
             )
 
-            # Make sure we have enough samples for the given split parameters
-            if max_test_size > max_train_size:
-                raise ValueError(
-                    f"Cannot have number of max_test_size={max_test_size} greater"
-                    f" than the  max_train_size={max_train_size}."
-                )
+            # ADD ERRORS
             # if n_samples - gap - (test_size * n_splits) <= 0:
             #     raise ValueError(
             #         f"Too many splits={n_splits} for number of samples"
@@ -1093,11 +1086,9 @@ class TimeSeriesSplit(_BaseKFold):
 
             indices = np.arange(n_samples)
             test_starts = range(0, n_samples - max_train_size, max_test_size)
-            # print('test_s', test_starts)
 
             for test_start in test_starts:
                 train_end = test_start + max_train_size
-                # print(test_start, train_end)
                 yield (
                     indices[test_start : train_end],
                     indices[train_end: train_end + max_test_size],
