@@ -1760,6 +1760,76 @@ def test_time_series_gap():
     with pytest.raises(ValueError, match="Too many splits.*and gap"):
         splits = TimeSeriesSplit(n_splits=4, gap=2).split(X)
         next(splits)
+        
+        
+def test_time_series_rolling_window():
+    X = np.arange(10)
+
+    # Test alone
+    splits = TimeSeriesSplit(n_behaviour=1, n_splits=3).split(X)
+
+    train, test = next(splits)
+    assert_array_equal(train, [0])
+    assert_array_equal(test, [1])
+
+    train, test = next(splits)
+    assert_array_equal(train, [1])
+    assert_array_equal(test, [2])
+    
+    train, test = next(splits)
+    assert_array_equal(train, [2])
+    assert_array_equal(test, [3])
+    
+    # Test with max_train_size
+    splits = TimeSeriesSplit(n_behaviour=1, n_splits=2, max_train_size=3).split(X)
+
+    train, test = next(splits)
+    assert_array_equal(train, [0, 1, 2])
+    assert_array_equal(test, [3])
+
+    train, test = next(splits)
+    assert_array_equal(train, [1, 2, 3])
+    assert_array_equal(test, [4])
+
+    train, test = next(splits)
+    assert_array_equal(train, [2, 3, 4])
+    assert_array_equal(test, [5])
+    
+    # Test max_test_size
+    splits = TimeSeriesSplit(n_behaviour=1, n_splits=2, max_train_size=2, max_test_size=2).split(X)
+
+    train, test = next(splits)
+    assert_array_equal(train, [0, 1])
+    assert_array_equal(test, [2, 3])
+
+    train, test = next(splits)
+    assert_array_equal(train, [2, 3])
+    assert_array_equal(test, [4, 5])
+
+    train, test = next(splits)
+    assert_array_equal(train, [4, 5])
+    assert_array_equal(test, [6, 7])
+    
+    # Test max_test_size with gap
+    splits = TimeSeriesSplit(n_behaviour=1, n_splits=2, max_train_size=3, max_test_size=2, gap=1).split(X)
+
+    train, test = next(splits)
+    assert_array_equal(train, [0, 1, 2])
+    assert_array_equal(test, [4, 5])
+
+    train, test = next(splits)
+    assert_array_equal(train, [2, 3, 4])
+    assert_array_equal(test, [6, 7])
+
+    train, test = next(splits)
+    assert_array_equal(train, [4, 5, 6])
+    assert_array_equal(test, [8, 9])
+
+    # Verify proper error is thrown
+        
+    with pytest.raises(ValueError, match="Cannot have number of max_test_size=3 greater than the  max_train_size=2."):
+        splits = TimeSeriesSplit(n_behaviour=1, n_splits=4, max_train_size=2, max_test_size=3).split(X)
+        next(splits)
 
 
 def test_nested_cv():
